@@ -1,0 +1,34 @@
+{
+  "name": "anselector",
+  "version": "0.0.2",
+  "author": "juetan",
+  "description": "A lightweight, modern, extendable dom library, written in typescript!",
+  "main": "dist/index.cjs",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "license": "MIT",
+  "keywords": [
+    "anselector"
+  ],
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "dev": "parcel ./playground/index.html",
+    "build": "parcel build ./src/index.ts"
+  },
+  "targets": {
+    "main": {
+      "optimize": true,
+      "sourceMap": false
+    },
+    "module": {
+      "optimize": true,
+      "sourceMap": false
+    }
+  },
+  "devDependencies": {
+    "@happy-dom/global-registrator": "^15.7.4"
+  }
+}

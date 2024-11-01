@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",                                                            
+    "noLib": false,                                    
+    "module": "ESNext",                                                               
+    "moduleResolution": "Bundler",                     
+    "baseUrl": "./",                                            
+    "resolveJsonModule": true,                        
+    "declaration": true,                                                       
+    "emitDeclarationOnly": true,                      
+    "sourceMap": false,                                                                 
+    "outDir": "./dist",                                             
+    "esModuleInterop": true,                                 
+    "forceConsistentCasingInFileNames": true,            
+    "strict": true,                                      
+    "noImplicitAny": false,                                      
+    "skipLibCheck": true                                 
+  }
+}
