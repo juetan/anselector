@@ -1,5 +1,5 @@
-import $, { AnSelector } from "../src/index";
-import myPlugin from "./plugin";
+import $, { AnSelector } from "../src/index"
+import myPlugin from "./plugin"
 
 $.use(myPlugin)
 
@@ -8,18 +8,18 @@ const $app = $("#app")
   .css("font-size: 20px;")
   .css({ color: "blue" })
   .css("color: red;")
-  .css('color: #33cc99; font-weight: 700;', 'replace')
+  .css("color: #33cc99; font-weight: 700;")
   .class("my-class")
   // .mycolor("#3c9")
-  .class("my-class", null)
+  .class("")
 
-console.log($('.li3').parent());
+console.log($(".li3").parent())
 
 console.log($app.attr("id"), $app.children())
 
 const $child = $(`<header>header here <button class="btn">button</button> </header>`)
 
-$child.parent($app)
+$child.parent($app).text()
 
 // $(".btn", $app).on("click", function (e) {
 //   console.log(this, e)
@@ -30,7 +30,7 @@ $child.$(".btn").on("click", () => {
 
 console.log("$.n", $.version, $child)
 
-for (const $li of $("li")) {
+for (const $li of $("li").es) {
   console.log("li: ", $li)
 }
 
@@ -38,57 +38,27 @@ const toast = (() => {
   let $el: AnSelector | null
   let timer: any
   const open = (content: string) => {
-    if (!$el) {
-      return
-    }
-    if (!$el.parent()) {
-      $el.parent(document.body)
-    }
+    if (!$el) return
+    if (!$el.parent()) $el.parent(document.body)
     $el.$(".an-toast-content").text(content)
     $el.css({ display: "flex" })
   }
-  const close = () => {
-    if (!$el) {
-      return
-    }
-    $el.css({ display: "none" })
-  }
-  const destroy = () => {
-    if (!$el) {
-      return
-    }
-    $el.parent(null)
-    $el = null
-  }
-  const getEl = () => {
-    return $el
-  }
+  const close = () => $el && $el.css({ display: "none" })
+  const destroy = () => $el && ($el.parent(null), ($el = null))
+  const getEl = () => $el
   const instance = { getEl, open, close, destroy }
-
-  function toast(options?: string | any) {
-    if (!options) {
-      options = { content: "" }
-    }
-    if (typeof options === "string") {
-      options = { content: options }
-    }
+  const toast = (options?: string | any) => {
+    if (!options) options = { content: "" }
+    if (typeof options === "string") options = { content: options }
     const { content, duration = 2000 } = options
-    if (!$el) {
-      $el = $(toasetTemplate({ content }))
-    }
+    if (!$el) $el = $(toasetTemplate({ content }))
     if (duration) {
-      if (timer) {
-        clearTimeout(timer)
-      }
+      if (timer) clearTimeout(timer)
       open(content)
-      setTimeout(() => {
-        close()
-        timer = null
-      }, duration)
+      setTimeout(() => (close(), (timer = null)), duration)
     }
     return instance
   }
-
   return toast
 })()
 

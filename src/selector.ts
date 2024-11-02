@@ -1,5 +1,9 @@
 export class AnSelector<T extends HTMLElement = HTMLElement> {
-  constructor(protected readonly elements: T[]) {}
+  constructor(protected readonly elements: T[]) {
+    if (!Array.isArray(elements)) {
+      throw Error("elements must be array")
+    }
+  }
 
   // internal
   protected each(callback: (el: T) => void) {
@@ -10,8 +14,8 @@ export class AnSelector<T extends HTMLElement = HTMLElement> {
   // internal
   [Symbol.iterator]() {
     let index = 0
-    const map = (i: any) => new AnSelector(i)
-    const items = this.elements.map(map) as any[]
+    const map = (i: any) => new AnSelector([i])
+    const items = this.elements.map(map)
     const next = (): { done: boolean; value: AnSelector<T> } => {
       if (index < items.length) {
         return { done: false, value: items[index++] }
@@ -59,11 +63,15 @@ export class AnSelector<T extends HTMLElement = HTMLElement> {
   /**
    * @example
    * ```ts
-   * // can be once by passing `once: true` to options in modern browser
+   * // listen once by passing `once: true` to options in modern browser
    * on('click', callback, options)
    * ```
    */
-  on<K extends keyof HTMLElementEventMap>(type: K,listener: (this: T, e: HTMLElementEventMap[K]) => any,options?: boolean | AddEventListenerOptions): this
+  on<K extends keyof HTMLElementEventMap>(
+    type: K,
+    listener: (this: T, e: HTMLElementEventMap[K]) => any,
+    options?: boolean | AddEventListenerOptions
+  ): this
   on(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): this
   on(event: any, value: any, options?: any) {
     return this.each((i) => i.addEventListener(event, value, options))
@@ -83,64 +91,60 @@ export class AnSelector<T extends HTMLElement = HTMLElement> {
    * @example
    * ```ts
    * css()                         // get css
-   * css(null)                     // remove all css
-   * css('color: red;', 'replace') // replace, append(default) css
+   * css('color: red;')            // append css
+   * css('set:color: red;')        // replace css
    * css({ color: 'red' })         // append css with object
    * ```
    */
   css(): string | undefined
-  css(value: null | Partial<CSSStyleDeclaration>): this
-  css(value: string, mode?: "replace"): this
-  css(value?: any, mode?: any) {
+  css(value: string | Partial<CSSStyleDeclaration>): this
+  css(value?: string | object) {
     if (value === void 0) {
       return this.el?.style.cssText
-    }
-    if (value === null) {
-      return this.each((i) => (i.style.cssText = ""))
     }
     if (typeof value === "object") {
       return this.each((i) => Object.assign(i.style, value))
     }
-    if (mode === void 0) {
-      return this.each((i) => (i.style.cssText += value))
+    if (value.startsWith("set:")) {
+      const v = value.substring(4)
+      return this.each((i) => (i.style.cssText = v))
     }
-    if (mode === "replace") {
-      return this.each((i) => (i.style.cssText = value))
-    }
-    return this
+    return this.each((i) => (i.style.cssText += value))
   }
 
   /**
    * @example
    * ```ts
-   * class()                   // get classname
-   * class(myclass)            // append classname
-   * class(myclass, null)      // remove classname
-   * class(myclass, 'has')     // if contains classname
-   * class(myclass, 'toggle')  // toggle classname
+   * class()             // get classname
+   * class('xx')         // append classname
+   * class('set:xx')     // replace all classname
+   * class('has:xx')     // if contains classname
+   * class('toggle:xx')  // toggle classname
+   * class('remove:xx')  // remove classname
    * ```
    */
   class(): string | undefined
-  class(name: string, mode: "has"): boolean
-  class(name: string, mode?: "toggle" | "replace" | null): this
-  class(name?: any, mode?: any) {
-    if (name === void 0) {
+  class(value: `has:${string}`): boolean
+  class(value: string): this
+  class(value?: string) {
+    if (value === void 0) {
       return this.el?.className
     }
-    if (mode === void 0) {
-      return this.each((i) => i.classList.add(name))
+    if (value.startsWith("has:")) {
+      const v = value.substring(4)
+      return this.el?.classList.contains(v)
     }
-    if (mode === null) {
-      return this.each((i) => i.classList.remove(name))
+    if (value.startsWith("set:")) {
+      const v = value.substring(4)
+      return this.each((i) => (i.className = v))
     }
-    if (mode === "has") {
-      return this.el?.classList.contains(name)
+    if (value.startsWith("remove:")) {
+      const v = value.substring(7)
+      return this.each((i) => i.classList.remove(v))
     }
-    if (mode === "toggle") {
-      return this.each((i) => i.classList.toggle(name))
-    }
-    if (mode === "replace") {
-      return this.each((i) => (i.className = name))
+    if (value.startsWith("toggle:")) {
+      const v = value.substring(7)
+      return this.each((i) => i.classList.toggle(v))
     }
     return this
   }
@@ -149,26 +153,26 @@ export class AnSelector<T extends HTMLElement = HTMLElement> {
    * @example
    * ```ts
    * text()                      // get inner text
-   * text(mytext, 'prepend')     // replace(default), prepend or append text
+   * text('xx')                  // replace text
+   * text('prepend:xx')          // prepend text
+   * text('append:xxx')          // append text
    * ```
    */
   text(): string
-  text(value: string, mode?: "prepend" | "append"): this
-  text(value?: any, mode?: any) {
+  text(value: string): this
+  text(value?: string) {
     if (value === void 0) {
       return this.el?.innerText ?? this.el?.textContent ?? ""
     }
-    const setText = (i: T) => {
-      let txt = value
-      if (mode === "prepend") {
-        txt = value + (i.innerText || i.textContent)
-      } else if (mode === "append") {
-        txt = (i.innerText || i.textContent) + value
-      }
-      i.innerText = txt
-      i.textContent = txt
+    if (value.startsWith("prepend:")) {
+      const v = value.substring(8)
+      return this.each((i) => ((i.innerText = v + i.innerText), (i.textContent = v + i.textContent)))
     }
-    return this.each(setText)
+    if (value.startsWith("append:")) {
+      const v = value.substring(7)
+      return this.each((i) => ((i.innerText += v), (i.textContent += v)))
+    }
+    return this.each((i) => ((i.innerText = value), (i.textContent = value)))
   }
 
   /**
@@ -190,24 +194,21 @@ export class AnSelector<T extends HTMLElement = HTMLElement> {
   /**
    * @example
    * ```ts
-   * attr('key')          // get attribute
-   * attr('key', null)    // remove attribute
-   * attr('key', 'value') // set attribute
+   * attr('key')           // get attribute
+   * attr('key', 'value')  // set attribute
+   * attr({ id: 'title' }) // set attribute
    * ```
    */
   attr(key: string): string | null
   attr(key: string, value: any): this
   attr(values: Record<string, any>): this
   attr(key: any, value?: any) {
-    if (typeof key === "object") {
-      const attrs = Object.entries<any>(key)
-      return this.each((i) => attrs.forEach(([k, v]) => i.setAttribute(k, v)))
-    }
     if (value === void 0) {
       return this.el?.getAttribute(key)
     }
-    if (value === null) {
-      return this.each((i) => i.removeAttribute(key))
+    if (key && typeof key === "object") {
+      const attrs = Object.entries<any>(key)
+      return this.each((i) => attrs.forEach(([k, v]) => i.setAttribute(k, v)))
     }
     return this.each((i) => i.setAttribute(key, value))
   }
@@ -217,9 +218,10 @@ export class AnSelector<T extends HTMLElement = HTMLElement> {
    * ```ts
    * parent()                    // return $parent
    * parent(null)                // remove from parent
-   * parent('.title', 'prepend') // prepend or append(default)
-   * parent(el)                  // change parent with html element
-   * parent($el)                 // change parent with $ element
+   * parent('.title')            // append to
+   * parent('prepend:.title')    // prepend to
+   * parent(el)                  // append to parent with html element
+   * parent($el)                 // append to parent with $ element
    * ```
    */
   parent<E extends HTMLElement = HTMLElement>(): AnSelector<E> | null
@@ -235,8 +237,12 @@ export class AnSelector<T extends HTMLElement = HTMLElement> {
     if (selector === null) {
       return this
     }
-    const call = mode === "prepend" ? "prepend" : "appendChild"
+    let call = mode === "prepend" ? "prepend" : "appendChild"
     if (typeof selector === "string") {
+      if (selector.startsWith("prepend:")) {
+        call = "prepend"
+        selector = selector.substring(8)
+      }
       this.el && document.querySelector(selector)?.[call](this.el)
       return this
     }
@@ -267,17 +273,18 @@ export class AnSelector<T extends HTMLElement = HTMLElement> {
   children(nodes?: any, mode?: any) {
     if (nodes === void 0) {
       const items = Array.from(this.el?.children ?? []) as any[]
-      return items.map((i) => new AnSelector(i))
+      return items.map((i) => new AnSelector([i]))
     }
     if (nodes === null) {
       return this.each((i) => (i.innerHTML = ""))
     }
     const call = mode === "prepend" ? "prepend" : "appendChild"
     if (nodes instanceof HTMLElement) {
-      return this.each((i) => i[call](nodes))
+      this.el && this.el[call](nodes)
+      return this
     }
     if (nodes instanceof AnSelector) {
-      nodes.el && this.each((i) => i[call](nodes.el))
+      nodes.el && this.el && this.el[call](nodes.el)
       return this
     }
     if (Array.isArray(nodes)) {

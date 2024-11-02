@@ -53,7 +53,6 @@ export const $ = (()=>{
       temp.innerHTML = selector
       const els = Array.from(temp.children) as any[]
       temp.innerHTML = ''
-      temp.remove()
       return new AnSelector(els)
     }
     if(typeof selector === 'string') {

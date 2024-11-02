@@ -72,7 +72,7 @@ describe("$()", () => {
 
   test("$() should be iteratable", () => {
     const $btns = $("button")
-    expect(Array.from($btns).length).eq(2)
+    expect(Array.from($btns.es).length).eq(2)
   })
 })
 
@@ -143,8 +143,8 @@ describe("$el.css()", () => {
     expect($(".css").css("width:10px;").css()).contain("color").contain("width")
   })
 
-  test("$el.css('xx','replace') should replace css", () => {
-    const css = $(".css").css("width:10px;", 'replace').css()
+  test("$el.css('set:xx') should replace css", () => {
+    const css = $(".css").css("set:width:10px;").css()
     expect(css?.includes("color")).toBe(false)
     expect(css?.includes("width")).toBe(true)
   })
@@ -154,8 +154,8 @@ describe("$el.css()", () => {
     expect(css?.includes("border")).toBe(true)
   })
 
-  test("$el.css(null) should remove all css", () => {
-    const css = $(".css").css(null).css()
+  test("$el.css(remove:xx) should remove all css", () => {
+    const css = $(".css").css("set:").css()
     expect(css).toBe("")
   })
 })
@@ -170,31 +170,31 @@ describe("$el.class()", () => {
     expect($(".class").class("class3").class()).contain("class3")
   })
 
-  test("$el.class('xx', null) should remove class", () => {
+  test("$el.class('remove:xx') should remove class", () => {
     const $el = $(".class")
     $el.class("class4")
     expect($el.class()?.includes("class4")).toBe(true)
-    $el.class('class4', null)
+    $el.class('remove:class4')
     expect($el.class()?.includes("class4")).toBe(false)
   })
 
-  test("$el.class('xx', 'has') should work", () => {
+  test("$el.class('has:xx') should work", () => {
     const $el = $(".class")
-    expect($el.class("class5", 'has')).toBe(false)
+    expect($el.class("has:class5")).toBe(false)
     $el.class('class5')
-    expect($el.class("class5", 'has')).toBe(true)
+    expect($el.class("has:class5")).toBe(true)
   })
 
-  test("$el.class('xx', 'toggle') should work", () => {
+  test("$el.class('toggle:xx') should work", () => {
     const $el = $(".class")
-    $el.class("class6", 'toggle')
+    $el.class("toggle:class6")
     expect($el.class()?.includes("class6")).toBe(true)
-    $el.class('class6', 'toggle')
+    $el.class('toggle:class6')
     expect($el.class()?.includes("class6")).toBe(false)
   })
 
-  test("$el.class('xx', 'replace') should work", () => {
-    const $el = $(".class").class('class7', 'replace')
+  test("$el.class('set:xx') should work", () => {
+    const $el = $(".class").class('set:class7')
     expect($el.class()).eq('class7')
   })
 })
@@ -208,12 +208,12 @@ describe("$el.text()", () => {
     expect($('.text').text('hello').text()).toEqual("hello")
   })
 
-  test("$el.text('xx', 'append') should append text", () => {
-    expect($('.text').text(',world', 'append').text()).toEqual("hello,world")
+  test("$el.text('append:xx'') should append text", () => {
+    expect($('.text').text('append:,world').text()).toEqual("hello,world")
   })
 
-  test("$el.text('xx', 'prepend') should prepend text", () => {
-    expect($('.text').text('$', 'prepend').text()).toEqual("$hello,world")
+  test("$el.text('prepend:xx') should prepend text", () => {
+    expect($('.text').text('prepend:$').text()).toEqual("$hello,world")
   })
 })
 
