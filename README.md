@@ -1,6 +1,37 @@
 
 A lightweight, modern, extendable dom library, written in typescript!
 
+
+## feature
+
+- lightweight, only 3 kb ungzipped
+- modern, no legacy code
+- extendable, easily write your plugin
+- written in typescript
+
+## quick start
+
+1. install
+
+```bash
+# node
+npm install anselector
+```
+
+```ts
+// browser(esm)
+import $ from '//esm.sh/enselector'
+```
+
+2. coding
+
+```ts
+import $ from 'anselector'
+// or import { $ } from 'anselector'
+
+$('.nav').css('color: red;').$('.title').class('myclass')
+```
+
 ## $ api
 
 `$`: the entry
@@ -17,13 +48,13 @@ $(document.body)
 $.version // v1.0.0
 ```
 
-`$.fn`: the prototype of core class, extends it to fit your netts.
+`$.fn`: the prototype of core class
 
 ```ts
 $.fn.mycall = function() {}
 ```
 
-`$.use`: use a plugin
+`$.use`
 
 ```ts
 $.use(myplugin)
@@ -46,7 +77,7 @@ $el.el
 `$el.$()`: find child
 
 ```ts
-$('.item').$('.title')
+$el.$('.title')
 ```
 
 `$el.on()`: listen once by pass `once: true` to options in modern browser
