@@ -1,19 +1,19 @@
-import { AnSelect } from "../src"
+import { $ } from "../src"
 
 declare module "../src" {
-  interface AnSelect {
-    alert: (content: string) => void
+  namespace $ {
+    export var alert: (content: string) => void
   }
   interface AnSelector {
     getData(key: string): string | undefined
   }
 }
 
-export default function myPlugin($: AnSelect) {
-  $.alert = function (content) {
+export default function myPlugin(app: typeof $) {
+  app.alert = function (content) {
     window.alert(content)
   }
-  $.fn.getData = function (key) {
+  app.fn.getData = function (key) {
     return this.el?.dataset[key]
   }
 }

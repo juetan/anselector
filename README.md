@@ -141,7 +141,7 @@ attr({})             // set attributes with object
 ```ts
 parent()                // return $parent
 parent('.title')        // change parent with css selector
-parent('prepend.title') // prepend to parent with css selector
+parent('prepend:.title') // prepend to parent with css selector
 parent(el)              // change parent with html element
 parent($el)             // change parent with $ element
 parent(null)            // remove from parent
