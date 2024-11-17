@@ -1,92 +1,78 @@
-import $, { AnSelector } from "../src/index"
+import an from "../src/index"
 import myPlugin from "./plugin"
+import { tip } from "./toast"
 
-$.use(myPlugin)
+// const an = $
 
-const $app = $("#app")
+an.use(myPlugin)
+an.use(tip)
+
+an(".showtip").click(() => {
+  tip("你好呀")
+})
+
+an(".click1").click(() => {
+  an(".click2").click(() => console.log("click 2" + Math.random()))
+})
+
+console.dir(an(".click2"))
+
+an(".click3").click(() => {
+  an(".click2").off("click")
+})
+
+an(".hide").click(() => {
+  console.log("click1122")
+  an(".list").css.toggle()
+})
+
+an(".code")
+
+an(".cssadd").click(() => {
+  // download(logo)
+  an.css("myid", "p { color: red; }")
+})
+
+an(".cssadd1").click(() => {
+  an.css("p { color: blue; }")
+})
+
+an(".cssdel").on("click", () => {
+  an.css.remove("myid")
+})
+
+an(".cssclear").on("click", () => {
+  an.css.clear()
+})
+
+console.dir(an)
+
+an("li").class.set("todo")
+const $app = an("#app")
   .css("color: red;")
   .css("font-size: 20px;")
   .css({ color: "blue" })
   .css("color: red;")
   .css("color: #33cc99; font-weight: 700;")
   .class("my-class")
-  // .mycolor("#3c9")
-  .class("")
+// .mycolor("#3c9")
+// .class("")
 
-console.log($(".li3").parent())
+console.log(an(".li3").parent())
 
-console.log($app.attr("id"), $app.children())
+// console.log($app.attr("id"), $app.children())
 
-const $child = $(`<header>header here <button class="btn">button</button> </header>`)
+const $child = an(`<header>header here <button class="btn">button</button> </header>`)
 
 $child.parent($app).text()
 
 // $(".btn", $app).on("click", function (e) {
 //   console.log(this, e)
 // })
-$child.$(".btn").on("click", () => {
-  console.log(toast("todo"))
-})
+$child.$(".btn").on("click", () => {})
 
-console.log("$.n", $.version, $child)
+console.log("$.n", an.version, $child)
 
-for (const $li of $("li").es) {
-  console.log("li: ", $li)
+for (const $li of an("li").es) {
+  // console.log("li: ", $li)
 }
-
-const toast = (() => {
-  let $el: AnSelector | null
-  let timer: any
-  const open = (content: string) => {
-    if (!$el) return
-    if (!$el.parent()) $el.parent(document.body)
-    $el.$(".an-toast-content").text(content)
-    $el.css({ display: "flex" })
-  }
-  const close = () => $el && $el.css({ display: "none" })
-  const destroy = () => $el && ($el.parent(null), ($el = null))
-  const getEl = () => $el
-  const instance = { getEl, open, close, destroy }
-  const toast = (options?: string | any) => {
-    if (!options) options = { content: "" }
-    if (typeof options === "string") options = { content: options }
-    const { content, duration = 2000 } = options
-    if (!$el) $el = $(toasetTemplate({ content }))
-    if (duration) {
-      if (timer) clearTimeout(timer)
-      open(content)
-      setTimeout(() => (close(), (timer = null)), duration)
-    }
-    return instance
-  }
-  return toast
-})()
-
-const toasetTemplate = ({ content }) => `
-<div class="an-toast">
-  <div class="an-toast-content">
-    ${content}
-  </div>
-  <style>
-    .an-toast {
-      position: fixed;
-      top: 0;
-      right: 0;
-      z-index: 9999;
-      width: 100%;
-      height: 100%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      user-select: none;
-      pointer-events: none;
-    }
-    .an-toast-content {
-      padding: 10px 20px;
-      border-radius: 3px;
-      background-color: rgba(0, 0, 0, 0.7);
-      color: #fff;
-    }
-  </style>
-</div>
-`
