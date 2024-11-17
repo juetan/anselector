@@ -1,12 +1,12 @@
 {
   "name": "anselector",
   "version": "0.0.3",
-  "author": "juetan",
   "description": "A lightweight, modern, extendable dom library, written in typescript!",
   "main": "dist/index.cjs",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
   "type": "module",
+  "author": "juetan",
   "license": "MIT",
   "keywords": [
     "anselector"
@@ -16,7 +16,8 @@
   ],
   "scripts": {
     "dev": "parcel ./playground/index.html",
-    "build": "parcel build ./src/index.ts"
+    "build": "parcel build ./src/index.ts",
+    "release": "npm run build && changelogen --release --push --publish"
   },
   "targets": {
     "main": {
@@ -29,6 +30,10 @@
     }
   },
   "devDependencies": {
-    "@happy-dom/global-registrator": "^15.7.4"
+    "@parcel/packager-ts": "^2.13.0",
+    "@parcel/transformer-typescript-types": "^2.13.0",
+    "changelogen": "^0.5.7",
+    "parcel": "^2.13.0",
+    "typescript": "^5.6.3"
   }
 }

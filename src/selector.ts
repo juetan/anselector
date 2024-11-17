@@ -20,7 +20,7 @@ export function anselector<T extends HTMLElement = HTMLElement>(elements: T[]): 
 export class AnSelector<T extends HTMLElement = HTMLElement> {
   constructor(protected readonly elements: T[] = []) {}
 
-  [Symbol.iterator]() {
+  protected [Symbol.iterator]() {
     let index = 0
     const map = (i: any) => anselector([i])
     const items = this.elements.map(map)
