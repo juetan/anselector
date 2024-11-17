@@ -8,16 +8,13 @@
   "type": "module",
   "author": "juetan",
   "license": "MIT",
-  "keywords": [
-    "anselector"
-  ],
-  "files": [
-    "dist"
-  ],
+  "keywords": ["anselector"],
+  "files": ["dist"],
   "scripts": {
     "dev": "parcel ./playground/index.html",
     "build": "parcel build ./src/index.ts",
-    "release": "npm run build && changelogen --release --push --publish"
+    "release": "npm run build && changelogen --release --push --publish",
+    "format": "biome fomat --write ."
   },
   "targets": {
     "main": {

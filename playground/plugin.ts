@@ -1,6 +1,6 @@
-import { AnSelect } from "../src"
+import { AnSelect } from '../src'
 
-declare module "../src" {
+declare module '../src' {
   interface AnSelect {
     alert: (content: string) => void
   }

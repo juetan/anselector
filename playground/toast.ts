@@ -1,6 +1,6 @@
-import { an, AnCallable, AnSelect } from "../src"
+import { an, AnSelector, AnSelect } from '../src'
 
-declare module "../src" {
+declare module '../src' {
   interface AnSelect {
     tip: AnTip
   }
@@ -35,12 +35,12 @@ const css = `
 }
 `
 
-const cssid = "__antip__"
-const msgid = ".an-toast-content"
+const cssid = '__antip__'
+const msgid = '.an-toast-content'
 
 interface AnTip {
   (message: string): void
-  el: AnCallable | null
+  el: AnSelector | null
   duration: number
   timer: any
   close(): void
@@ -49,14 +49,14 @@ interface AnTip {
 }
 
 export const tip = function (message: string) {
-    console.log('runs');
+  console.log('runs')
   if (!tip.el) {
     an.css(cssid, css)
     tip.el = an(dom)
     tip.el.parent(document.body)
   }
   tip.el(msgid).text(message)
-  tip.el.css("display: flex")
+  tip.el.css('display: flex')
   if (tip.timer) {
     clearTimeout(tip.timer)
   }
@@ -80,7 +80,7 @@ tip.destroy = function () {
   an.css.remove(cssid)
 }
 
-tip.install = (app) => {
-    console.log('call install');
+tip.install = app => {
+  console.log('call install')
   app.tip = tip
 }

@@ -1,6 +1,6 @@
-import { getVersion } from './macro' with { type: 'macro' };
-import { AnSelectCSS, css } from './select-css';
-import { AnCallable, anselector, AnSelector } from "./selector";
+import { getVersion } from './macro' with { type: 'macro' }
+import { AnSelectCSS, css } from './select-css'
+import { anselector, AnSelector } from './selector'
 
 export interface AnPlugin {
   install(this: AnSelect, app: AnSelect): void
@@ -10,7 +10,7 @@ export interface AnSelect {
   /**
    * dom library, if there are multi elements:
    * All get operation run on first element, all set operation run on every element
-   * @alias 
+   * @alias
    * `anselect` `an` `$`
    * @example
    * ```ts
@@ -19,8 +19,8 @@ export interface AnSelect {
    * $(document.body)        // html element
    * ```
    */
-  <T extends HTMLElement = HTMLElement>(selector: string | T | T[] | NodeListOf<T> | null): AnCallable<T>
-  <T extends AnCallable = AnCallable>(selector: T): T
+  <T extends HTMLElement = HTMLElement>(selector: string | T | T[] | NodeListOf<T> | null): AnSelector<T>
+  <T extends AnSelector = AnSelector>(selector: T): T
   /**
    * the current version
    * @example
@@ -65,14 +65,14 @@ export interface AnSelect {
 
 export const anselect = function (selector: any) {
   if (/</.test(selector)) {
-    const temp = document.createElement("div")
+    const temp = document.createElement('div')
     temp.innerHTML = selector
     const els = Array.from(temp.children) as any[]
     temp.innerHTML = ''
     return anselector(els)
   }
-  if(typeof selector === 'string') {
-    const els =[...document.querySelectorAll(selector) ?? []]
+  if (typeof selector === 'string') {
+    const els = [...(document.querySelectorAll(selector) ?? [])]
     return anselector(els as any[])
   }
   if (selector instanceof HTMLElement) {
@@ -81,10 +81,10 @@ export const anselect = function (selector: any) {
   if (selector instanceof AnSelector) {
     return selector
   }
-  if(selector instanceof NodeList) {
+  if (selector instanceof NodeList) {
     return anselector(Array.from(selector) as any)
   }
-  if(Array.isArray(selector)) {
+  if (Array.isArray(selector)) {
     return anselector(selector)
   }
   return anselector([])
@@ -93,12 +93,12 @@ export const anselect = function (selector: any) {
 anselect.version = getVersion()
 anselect.fn = AnSelector.prototype
 anselect.css = css
-anselect.use = function (plugin) { 
-  if((plugin as AnPlugin).install) {
-    (plugin as AnPlugin).install.call(this, this)
+anselect.use = function (plugin) {
+  if ((plugin as AnPlugin).install) {
+    ;(plugin as AnPlugin).install.call(this, this)
     return this
   }
-  if(typeof plugin === 'function') {
+  if (typeof plugin === 'function') {
     plugin.call(this, this)
     return this
   }
@@ -107,7 +107,7 @@ anselect.use = function (plugin) {
 
 export function download(url: string, name: string = 'download') {
   const el = $(`<a download="${name}" href="${url}"></a>`)
-  console.log(el.el);
+  console.log(el.el)
   el.css.hide()
   el.parent(document.body)
   el.click()

@@ -6,9 +6,7 @@
   <img alt="npm bundle size" src="https://img.shields.io/bundlephobia/min/anselector">
   <img alt="npm bundle size" src="https://img.shields.io/bundlephobia/minzip/anselector">
   <img alt="NPM Type Definitions" src="https://img.shields.io/npm/types/anselector">
-
 </p>
-
 
 A lightweight, modern, extendable dom library, written in typescript!
 
@@ -33,10 +31,8 @@ import $ from '//esm.sh/enselector'
 2. coding
 
 ```
-// utils
-$.version
-// select element(s)
-$(".title").class('active').click()
+$.version                 // utils
+$(".title").click()       // select element(s)
 ```
 
 ## api

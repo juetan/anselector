@@ -1,19 +1,19 @@
-import { AnSelector, anselector } from "./selector"
+import { AnSelector, anselector } from './selector'
 
 export interface AnParent<E extends HTMLElement = HTMLElement, T = AnSelector<E>> {
   (this: T): T | null
   (this: T, parent: string | null | AnSelector | HTMLElement): T
-  $: T
+  __: T
   prepend: (content: string) => T
 }
 
 const clean = (els: HTMLElement[]) => {
-  els.forEach((el) => el.parentElement?.removeChild(el))
+  els.forEach(el => el.parentElement?.removeChild(el))
   els.splice(1)
 }
 
 const resolveEl = (el: any): HTMLElement | undefined | null => {
-  if (typeof el === "string") {
+  if (typeof el === 'string') {
     return document.querySelector<HTMLElement>(el)
   }
   if (el instanceof HTMLElement) {
@@ -37,8 +37,8 @@ export const parent = function (selector) {
 } as AnParent
 
 parent.prepend = function (selector) {
-  clean(this.$.es)
+  clean(this.__.es)
   const el = resolveEl(selector)
-  this.$.el && el && el.prepend(this.$.el)
-  return this.$
+  this.__.el && el && el.prepend(this.__.el)
+  return this.__
 }

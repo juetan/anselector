@@ -1,16 +1,9 @@
-import { AnClass, classes } from "./selector-class"
-import { AnCss, css } from "./selector-css"
-import { AnParent, parent } from "./selector-parent"
-import { createChainable } from "./utils"
+import { AnClass, classes } from './selector-class'
+import { AnCss, css } from './selector-css'
+import { AnParent, parent } from './selector-parent'
+import { createChainable } from './utils'
 
-export interface AnCallable<T extends HTMLElement = HTMLElement> extends AnSelector<T> {
-  /**
-   * alias for AnSelector.$
-   */
-  (selector: string): AnCallable<T>
-}
-
-export function anselector<T extends HTMLElement = HTMLElement>(elements: T[]): AnCallable<T> {
+export function anselector<T extends HTMLElement = HTMLElement>(elements: T[]): AnSelector<T> {
   const instance = new AnSelector(elements)
   const callable = instance.$.bind(instance)
   Object.setPrototypeOf(callable, instance)
@@ -24,7 +17,7 @@ export class AnSelector<T extends HTMLElement = HTMLElement> {
     let index = 0
     const map = (i: any) => anselector([i])
     const items = this.elements.map(map)
-    const next = (): { done: boolean; value: AnCallable<T> } => {
+    const next = (): { done: boolean; value: AnSelector<T> } => {
       if (index < items.length) {
         return { done: false, value: items[index++] }
       }
@@ -70,7 +63,7 @@ export class AnSelector<T extends HTMLElement = HTMLElement> {
   on<K extends keyof HTMLElementEventMap>(
     event: K,
     listener: (this: T, e: HTMLElementEventMap[K]) => any,
-    options?: boolean | AddEventListenerOptions
+    options?: boolean | AddEventListenerOptions,
   ): this
   on(event: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): this
   on(event: any, callback: any, options?: boolean | AddEventListenerOptions) {
@@ -92,11 +85,11 @@ export class AnSelector<T extends HTMLElement = HTMLElement> {
    * click(() => null)  // add listenner
    * ```
    */
-  click(listener?: (e: HTMLElementEventMap["click"]) => any, options?: boolean | AddEventListenerOptions) {
+  click(listener?: (e: HTMLElementEventMap['click']) => any, options?: boolean | AddEventListenerOptions) {
     if (listener == void 0) {
-      return this.each((el) => el.click())
+      return this.each(el => el.click())
     }
-    return this.on("click", listener, options)
+    return this.on('click', listener, options)
   }
 
   /**
@@ -106,8 +99,7 @@ export class AnSelector<T extends HTMLElement = HTMLElement> {
    * ```
    */
   off(event: keyof HTMLElementEventMap, callback?: (...args: any[]) => any, options?: boolean | EventListenerOptions) {
-    // return this.each((el) => el.removeEventListener(type, listener, options))
-    return this.each((el) => {
+    return this.each(el => {
       const callbacks = (el as any)._events?.[event]
       if (callback) {
         el.removeEventListener(event, callback, options)
@@ -160,7 +152,7 @@ export class AnSelector<T extends HTMLElement = HTMLElement> {
     if (value === void 0) {
       return this.el?.innerText ?? this.el?.textContent
     }
-    return this.each((el) => ((el.innerText = value), (el.textContent = value)))
+    return this.each(el => ((el.innerText = value), (el.textContent = value)))
   }
 
   /**
@@ -176,7 +168,7 @@ export class AnSelector<T extends HTMLElement = HTMLElement> {
     if (value === void 0) {
       return this.el?.innerHTML
     }
-    return this.each((i) => (i.innerHTML = value))
+    return this.each(el => (el.innerHTML = value))
   }
 
   /**
@@ -194,11 +186,11 @@ export class AnSelector<T extends HTMLElement = HTMLElement> {
     if (value === void 0) {
       return this.el?.getAttribute(key)
     }
-    if (key && typeof key === "object") {
+    if (key && typeof key === 'object') {
       const attrs = Object.entries<any>(key)
-      return this.each((el) => attrs.forEach(([k, v]) => el.setAttribute(k, v)))
+      return this.each(el => attrs.forEach(([k, v]) => el.setAttribute(k, v)))
     }
-    return this.each((el) => el.setAttribute(key, value))
+    return this.each(el => el.setAttribute(key, value))
   }
 
   /**
@@ -230,9 +222,13 @@ export class AnSelector<T extends HTMLElement = HTMLElement> {
       return anselector(els as T[])
     }
     if (value === null) {
-      return this.each((el) => (el.innerHTML = ""))
+      return this.each(el => (el.innerHTML = ''))
     }
     const els = [...(this.el?.querySelectorAll(value) ?? [])]
     return anselector(els as T[])
   }
+}
+
+export interface AnSelector<T extends HTMLElement = HTMLElement> {
+  (selector: string): this
 }
