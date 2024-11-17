@@ -1,22 +1,30 @@
+import { AnClass, classes } from "./selector-class"
+import { AnCss, css } from "./selector-css"
+import { AnParent, parent } from "./selector-parent"
+import { createChainable } from "./utils"
+
+export interface AnCallable<T extends HTMLElement = HTMLElement> extends AnSelector<T> {
+  /**
+   * alias for AnSelector.$
+   */
+  (selector: string): AnCallable<T>
+}
+
+export function anselector<T extends HTMLElement = HTMLElement>(elements: T[]): AnCallable<T> {
+  const instance = new AnSelector(elements)
+  const callable = instance.$.bind(instance)
+  Object.setPrototypeOf(callable, instance)
+  return callable as any
+}
+
 export class AnSelector<T extends HTMLElement = HTMLElement> {
-  constructor(protected readonly elements: T[]) {
-    if (!Array.isArray(elements)) {
-      throw Error("elements must be array")
-    }
-  }
+  constructor(protected readonly elements: T[] = []) {}
 
-  // internal
-  protected each(callback: (el: T) => void) {
-    this.elements.forEach(callback)
-    return this
-  }
-
-  // internal
   [Symbol.iterator]() {
     let index = 0
-    const map = (i: any) => new AnSelector([i])
+    const map = (i: any) => anselector([i])
     const items = this.elements.map(map)
-    const next = (): { done: boolean; value: AnSelector<T> } => {
+    const next = (): { done: boolean; value: AnCallable<T> } => {
       if (index < items.length) {
         return { done: false, value: items[index++] }
       }
@@ -26,10 +34,10 @@ export class AnSelector<T extends HTMLElement = HTMLElement> {
   }
 
   /**
-   * the (first) element
+   *
    * @example
    * ```ts
-   * $('div').el
+   * $('div').el   // the (first) element
    * ```
    */
   get el(): T | null {
@@ -37,27 +45,19 @@ export class AnSelector<T extends HTMLElement = HTMLElement> {
   }
 
   /**
-   * the elements
-   * @example
-   * ```ts
-   * $('div').es
-   * ```
-   */
-  get es(): T[] {
-    return [...this.elements]
-  }
-
-  /**
-   * select child(ren) from current el.
    *
    * @example
    * ```ts
-   * $('.item').$('.title') // new instance
+   * $('div').es   // the elements
    * ```
    */
-  $<T extends HTMLElement = HTMLElement>(selector: string) {
-    const els = [...(this.el?.querySelectorAll(selector) ?? [])]
-    return new AnSelector<T>(els as T[])
+  get es(): T[] {
+    return this.elements
+  }
+
+  each(callback: (el: T) => void) {
+    this.elements.forEach(callback)
+    return this
   }
 
   /**
@@ -68,13 +68,35 @@ export class AnSelector<T extends HTMLElement = HTMLElement> {
    * ```
    */
   on<K extends keyof HTMLElementEventMap>(
-    type: K,
+    event: K,
     listener: (this: T, e: HTMLElementEventMap[K]) => any,
     options?: boolean | AddEventListenerOptions
   ): this
-  on(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): this
-  on(event: any, value: any, options?: any) {
-    return this.each((i) => i.addEventListener(event, value, options))
+  on(event: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): this
+  on(event: any, callback: any, options?: boolean | AddEventListenerOptions) {
+    return this.each((el: any) => {
+      if (!options || options === true || !options.once) {
+        el._events ??= {}
+        el._events[event] ??= []
+        el._events[event].push(callback)
+      }
+      el.addEventListener(event, callback, options)
+    })
+  }
+
+  /**
+   * bind event or trigger click
+   * @example
+   * ```ts
+   * click()            // trigger click
+   * click(() => null)  // add listenner
+   * ```
+   */
+  click(listener?: (e: HTMLElementEventMap["click"]) => any, options?: boolean | AddEventListenerOptions) {
+    if (listener == void 0) {
+      return this.each((el) => el.click())
+    }
+    return this.on("click", listener, options)
   }
 
   /**
@@ -83,8 +105,22 @@ export class AnSelector<T extends HTMLElement = HTMLElement> {
    * off('click', listener, options)            // remove event listener
    * ```
    */
-  off(type: keyof HTMLElementEventMap, listener: (...args: any[]) => any, options?: boolean | EventListenerOptions) {
-    return this.each((i) => i.removeEventListener(type, listener, options))
+  off(event: keyof HTMLElementEventMap, callback?: (...args: any[]) => any, options?: boolean | EventListenerOptions) {
+    // return this.each((el) => el.removeEventListener(type, listener, options))
+    return this.each((el) => {
+      const callbacks = (el as any)._events?.[event]
+      if (callback) {
+        el.removeEventListener(event, callback, options)
+        return
+      }
+      if (!callbacks) {
+        return
+      }
+      for (const fn of callbacks) {
+        el.removeEventListener(event, fn, options)
+      }
+      delete (el as any)._events
+    })
   }
 
   /**
@@ -92,94 +128,46 @@ export class AnSelector<T extends HTMLElement = HTMLElement> {
    * ```ts
    * css()                         // get css
    * css('color: red;')            // append css
-   * css('set:color: red;')        // replace css
    * css({ color: 'red' })         // append css with object
+   * css.set('color: red;')        // replace css
    * ```
    */
-  css(): string | undefined
-  css(value: string | Partial<CSSStyleDeclaration>): this
-  css(value?: string | object) {
-    if (value === void 0) {
-      return this.el?.style.cssText
-    }
-    if (typeof value === "object") {
-      return this.each((i) => Object.assign(i.style, value))
-    }
-    if (value.startsWith("set:")) {
-      const v = value.substring(4)
-      return this.each((i) => (i.style.cssText = v))
-    }
-    return this.each((i) => (i.style.cssText += value))
-  }
+  css: AnCss<T> = createChainable(css, this)
 
   /**
    * @example
    * ```ts
    * class()             // get classname
    * class('xx')         // append classname
-   * class('set:xx')     // replace all classname
-   * class('has:xx')     // if contains classname
-   * class('toggle:xx')  // toggle classname
-   * class('remove:xx')  // remove classname
+   * class.set('xx')     // replace all classname
+   * class.has('xx')     // if contains classname
+   * class.toggle('xx')  // toggle classname
+   * class.remove('xx')  // remove classname
    * ```
    */
-  class(): string | undefined
-  class(value: `has:${string}`): boolean
-  class(value: string): this
-  class(value?: string) {
-    if (value === void 0) {
-      return this.el?.className
-    }
-    if (value.startsWith("has:")) {
-      const v = value.substring(4)
-      return this.el?.classList.contains(v)
-    }
-    if (value.startsWith("set:")) {
-      const v = value.substring(4)
-      return this.each((i) => (i.className = v))
-    }
-    if (value.startsWith("remove:")) {
-      const v = value.substring(7)
-      return this.each((i) => i.classList.remove(v))
-    }
-    if (value.startsWith("toggle:")) {
-      const v = value.substring(7)
-      return this.each((i) => i.classList.toggle(v))
-    }
-    return this
-  }
+  class: AnClass<T> = createChainable(classes, this)
 
   /**
    * @example
    * ```ts
-   * text()                      // get inner text
-   * text('xx')                  // replace text
-   * text('prepend:xx')          // prepend text
-   * text('append:xxx')          // append text
+   * text()                      // get text
+   * text('xx')                  // set text
    * ```
    */
-  text(): string
+  text(): string | undefined
   text(value: string): this
   text(value?: string) {
     if (value === void 0) {
-      return this.el?.innerText ?? this.el?.textContent ?? ""
+      return this.el?.innerText ?? this.el?.textContent
     }
-    if (value.startsWith("prepend:")) {
-      const v = value.substring(8)
-      return this.each((i) => ((i.innerText = v + i.innerText), (i.textContent = v + i.textContent)))
-    }
-    if (value.startsWith("append:")) {
-      const v = value.substring(7)
-      return this.each((i) => ((i.innerText += v), (i.textContent += v)))
-    }
-    return this.each((i) => ((i.innerText = value), (i.textContent = value)))
+    return this.each((el) => ((el.innerText = value), (el.textContent = value)))
   }
 
   /**
    * @example
    * ```ts
-   * html()            // get inner html
-   * html('value')     // replace inner html
+   * html()            // get html
+   * html('value')     // set html
    * ```
    */
   html(): string | undefined
@@ -208,88 +196,43 @@ export class AnSelector<T extends HTMLElement = HTMLElement> {
     }
     if (key && typeof key === "object") {
       const attrs = Object.entries<any>(key)
-      return this.each((i) => attrs.forEach(([k, v]) => i.setAttribute(k, v)))
+      return this.each((el) => attrs.forEach(([k, v]) => el.setAttribute(k, v)))
     }
-    return this.each((i) => i.setAttribute(key, value))
+    return this.each((el) => el.setAttribute(key, value))
   }
 
   /**
    * @example
    * ```ts
    * parent()                    // return $parent
-   * parent(null)                // remove from parent
    * parent('.title')            // append to
-   * parent('prepend:.title')    // prepend to
    * parent(el)                  // append to parent with html element
    * parent($el)                 // append to parent with $ element
+   * parent(null)                // remove from parent
+   * parent.prepend()            // prepend to
    * ```
    */
-  parent<E extends HTMLElement = HTMLElement>(): AnSelector<E> | null
-  parent(selector: null): this
-  parent(selector: string | HTMLElement | AnSelector, mode?: "prepend"): this
-  parent(selector?: any, mode?: any) {
-    if (selector === void 0) {
-      const parent = this.el?.parentElement
-      return parent && new AnSelector([parent])
-    }
-    this.each((i) => i.parentElement?.removeChild(i))
-    this.elements.splice(1)
-    if (selector === null) {
-      return this
-    }
-    let call = mode === "prepend" ? "prepend" : "appendChild"
-    if (typeof selector === "string") {
-      if (selector.startsWith("prepend:")) {
-        call = "prepend"
-        selector = selector.substring(8)
-      }
-      this.el && document.querySelector(selector)?.[call](this.el)
-      return this
-    }
-    if (selector instanceof AnSelector) {
-      this.el && selector.el?.[call](this.el)
-      return this
-    }
-    if (selector instanceof HTMLElement) {
-      this.el && selector[call](this.el)
-      return this
-    }
-    return this
-  }
+  parent: AnParent<T> = createChainable(parent, this)
 
   /**
+   * select child(ren) from current el.
+   *
    * @example
    * ```ts
-   * children()                // return $child[]
-   * children(null)            // remove children
-   * children(el, 'prepend')   // append(default) or prepend child
-   * children([el])            // replace children
+   * $()           // get the direct children
+   * $('.title')   // find child(ren) with css selector
+   * $(null)       // remove all children
    * ```
    */
-  children<E extends HTMLElement = HTMLElement>(): AnSelector<E>[]
-  children(node: null): this
-  children(node: HTMLElement | AnSelector, mode?: "prepend"): this
-  children(node: HTMLElement[]): this
-  children(nodes?: any, mode?: any) {
-    if (nodes === void 0) {
-      const items = Array.from(this.el?.children ?? []) as any[]
-      return items.map((i) => new AnSelector([i]))
+  $<T extends HTMLElement = HTMLElement>(value?: string) {
+    if (value === void 0) {
+      const els = Array.from(this.el?.children ?? [])
+      return anselector(els as T[])
     }
-    if (nodes === null) {
-      return this.each((i) => (i.innerHTML = ""))
+    if (value === null) {
+      return this.each((el) => (el.innerHTML = ""))
     }
-    const call = mode === "prepend" ? "prepend" : "appendChild"
-    if (nodes instanceof HTMLElement) {
-      this.el && this.el[call](nodes)
-      return this
-    }
-    if (nodes instanceof AnSelector) {
-      nodes.el && this.el && this.el[call](nodes.el)
-      return this
-    }
-    if (Array.isArray(nodes)) {
-      return this.each((i) => i.replaceChildren(...nodes))
-    }
-    return this
+    const els = [...(this.el?.querySelectorAll(value) ?? [])]
+    return anselector(els as T[])
   }
 }
